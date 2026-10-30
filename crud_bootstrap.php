@@ -4,8 +4,7 @@ require_once __DIR__ . '/auth.php';
 require_login();
 require_once __DIR__ . '/config/db.php';
 
-if (empty($_SESSION['csrf'])) {
-    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+if (empty($_SESSION['csrf'])) {$_SESSION['csrf'] = bin2hex(random_bytes(32));
 }
 
 function h($v) {
@@ -39,13 +38,19 @@ function page_start($title) {
 </head>
 <body>
 <main class="wrap">
-    <nav class="navbar">
-        <a href="index.php" class="logo">🏸 Badminton Court</a>
-        <div class="nav-links">
-            <a href="index.php">จองสนาม</a>
-            <a href="resale_market.php">ตลาดคอร์ทหลุด</a>
-            <a href="my_bookings.php">รายการจองของฉัน</a>
-            <a href="logout.php" class="btn-logout">ออกจากระบบ</a>
+    <nav class="navbar" style="display:flex; justify-content:space-between; align-items:center; background:#135c9a; color:white; padding:15px 20px; border-radius:8px; margin-bottom:20px;">
+        <a href="index.php" class="logo" style="color:white; text-decoration:none; font-weight:bold; font-size:1.2rem;">🏸 Badminton Court</a>
+        <div class="nav-links" style="display:flex; gap:15px; align-items:center;">
+            <a href="index.php" style="color:white; text-decoration:none;">จองสนาม</a>
+            <a href="resale_market.php" style="color:white; text-decoration:none;">ตลาดคอร์ทหลุด</a>
+            <a href="my_bookings.php" style="color:white; text-decoration:none;">รายการจองของฉัน</a>';
+            
+            // แสดงเมนูแอดมินเฉพาะสิทธิ์ OWNER
+            if (($_SESSION['role'] ?? '') === 'OWNER') {
+                echo '<a href="admin_slots.php" style="color:#ffeb3b; font-weight:bold; text-decoration:none;">⚙️ จัดการแอดมิน</a>';
+            }
+
+    echo '  <a href="logout.php" class="btn-logout" style="color:#ffcdd2; text-decoration:none;">ออกจากระบบ</a>
         </div>
     </nav>
     <div class="panel">
