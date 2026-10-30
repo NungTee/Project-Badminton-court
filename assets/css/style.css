@@ -1,0 +1,29 @@
+body { font-family: 'Sarabun', sans-serif; background: #f4f6f8; margin: 0; padding: 0; color: #333; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 20px; }
+.navbar { display: flex; justify-content: space-between; align-items: center; background: #135c9a; color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
+.navbar a { color: white; text-decoration: none; margin-left: 15px; font-weight: bold; }
+.logo { font-size: 1.2rem; margin-left: 0 !important; }
+.panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+/* Table Grid */
+.grid-table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: center; }
+.grid-table th, .grid-table td { border: 1px solid #e0e0e0; padding: 10px; }
+.grid-table th { background: #f0f4f8; }
+
+.slot-btn { display: block; padding: 8px 5px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; width: 100%; box-sizing: border-box; }
+.slot-btn.available { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.slot-btn.available:hover { background: #c8e6c9; }
+.slot-btn.holding { background: #fff3e0; color: #ef6c00; cursor: not-allowed; }
+.slot-btn.booked { background: #ffebee; color: #c62828; cursor: not-allowed; }
+
+.legend { margin: 15px 0; display: flex; gap: 15px; }
+.badge { padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+.badge.available { background: #e8f5e9; color: #2e7d32; }
+.badge.holding { background: #fff3e0; color: #ef6c00; }
+.badge.booked { background: #ffebee; color: #c62828; }
+
+.card { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
+.err { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 6px; }
+.ok { color: #2e7d32; background: #e8f5e9; padding: 10px; border-radius: 6px; }
+.btn-confirm { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.btn-resale { background: #ef6c00; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
