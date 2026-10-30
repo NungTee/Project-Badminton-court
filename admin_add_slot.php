@@ -1,5 +1,6 @@
 <?php
 // admin_slots.php
+date_default_timezone_set('Asia/Bangkok');
 require_once __DIR__ . '/crud_bootstrap.php';
 
 // ตรวจสอบสิทธิ์ผู้ใช้ (ต้องเป็น OWNER เท่านั้น)
@@ -16,7 +17,7 @@ if (($_SESSION['role'] ?? '') !== 'OWNER') {
 $message = '';
 $error = '';
 
-// 1. จัดการการเพิ่มสล็อตเวลาใหม่
+// 1. เพิ่มสล็อตเวลาใหม่
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_slot') {
     verify_csrf();
 
@@ -45,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_s
     }
 }
 
-// 2. จัดการการลบสล็อตเวลา
+// 2. ลบสล็อตเวลา
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_slot') {
     verify_csrf();
     $slot_id = valid_id($_POST['slot_id'] ?? null);
@@ -106,12 +107,12 @@ page_start("จัดการสล็อตเวลาสนาม (แอด
 
         <div>
             <label style="display:block; font-weight:bold; margin-bottom:5px;">เวลาเริ่มต้น:</label>
-            <input type="time" name="start_time" value="23:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+            <input type="time" name="start_time" value="17:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
         </div>
 
         <div>
             <label style="display:block; font-weight:bold; margin-bottom:5px;">เวลาสิ้นสุด:</label>
-            <input type="time" name="end_time" value="00:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+            <input type="time" name="end_time" value="18:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
         </div>
 
         <div>

@@ -2,7 +2,7 @@
 // config/db.php
 $host = getenv('DB_HOST') ?: 'localhost';
 $user = getenv('DB_USER') ?: 's68160383';
-$pass = getenv('DB_PASS') ?: 'K2SDuSaN';
+$pass = getenv('DB_PASS') ?: '';
 $dbname = getenv('DB_NAME') ?: 's68160383';
 
 $conn = mysqli_connect($host, $user, $pass, $dbname);

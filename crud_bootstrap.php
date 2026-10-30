@@ -1,10 +1,12 @@
 <?php
 // crud_bootstrap.php
+date_default_timezone_set('Asia/Bangkok');
 require_once __DIR__ . '/auth.php';
 require_login();
 require_once __DIR__ . '/config/db.php';
 
-if (empty($_SESSION['csrf'])) {$_SESSION['csrf'] = bin2hex(random_bytes(32));
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
 }
 
 function h($v) {
@@ -44,12 +46,10 @@ function page_start($title) {
             <a href="index.php" style="color:white; text-decoration:none;">จองสนาม</a>
             <a href="resale_market.php" style="color:white; text-decoration:none;">ตลาดคอร์ทหลุด</a>
             <a href="my_bookings.php" style="color:white; text-decoration:none;">รายการจองของฉัน</a>';
-            
-            // แสดงเมนูแอดมินเฉพาะสิทธิ์ OWNER
             if (($_SESSION['role'] ?? '') === 'OWNER') {
-                echo '<a href="admin_slots.php" style="color:#ffeb3b; font-weight:bold; text-decoration:none;">⚙️ จัดการแอดมิน</a>';
+                echo '<a href="admin_slots.php" style="color:#ffeb3b; font-weight:bold; text-decoration:none;">⚙️ จัดการเวลา</a>';
+                echo '<a href="admin_dashboard.php" style="color:#80deea; font-weight:bold; text-decoration:none;">📊 แดชบอร์ด</a>';
             }
-
     echo '  <a href="logout.php" class="btn-logout" style="color:#ffcdd2; text-decoration:none;">ออกจากระบบ</a>
         </div>
     </nav>
