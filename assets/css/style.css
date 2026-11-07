@@ -1,29 +1,341 @@
-body { font-family: 'Sarabun', sans-serif; background: #f4f6f8; margin: 0; padding: 0; color: #333; }
-.wrap { max-width: 1000px; margin: 0 auto; padding: 20px; }
-.navbar { display: flex; justify-content: space-between; align-items: center; background: #135c9a; color: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; }
-.navbar a { color: white; text-decoration: none; margin-left: 15px; font-weight: bold; }
-.logo { font-size: 1.2rem; margin-left: 0 !important; }
-.panel { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+/* assets/css/style.css - Clean Dynamic Sport Style */
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
 
-/* Table Grid */
-.grid-table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: center; }
-.grid-table th, .grid-table td { border: 1px solid #e0e0e0; padding: 10px; }
-.grid-table th { background: #f0f4f8; }
+:root {
+    --bg-main: #f8fafc;
+    --card-bg: #ffffff;
+    --primary-dark: #0f172a;
+    --primary-hover: #1e293b;
+    --accent-blue: #38bdf8;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    
+    /* Sport Color Palette (Fresh & Dynamic) */
+    --sport-available-bg: #ecfdf5;
+    --sport-available-border: #a7f3d0;
+    --sport-available-text: #047857;
+    --sport-available-hover: #10b981;
 
-.slot-btn { display: block; padding: 8px 5px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; width: 100%; box-sizing: border-box; }
-.slot-btn.available { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-.slot-btn.available:hover { background: #c8e6c9; }
-.slot-btn.holding { background: #fff3e0; color: #ef6c00; cursor: not-allowed; }
-.slot-btn.booked { background: #ffebee; color: #c62828; cursor: not-allowed; }
+    --sport-holding-bg: #fff7ed;
+    --sport-holding-border: #fed7aa;
+    --sport-holding-text: #c2410c;
 
-.legend { margin: 15px 0; display: flex; gap: 15px; }
-.badge { padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
-.badge.available { background: #e8f5e9; color: #2e7d32; }
-.badge.holding { background: #fff3e0; color: #ef6c00; }
-.badge.booked { background: #ffebee; color: #c62828; }
+    --sport-booked-bg: #fef2f2;
+    --sport-booked-border: #fecaca;
+    --sport-booked-text: #b91c1c;
 
-.card { border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin-bottom: 15px; }
-.err { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 6px; }
-.ok { color: #2e7d32; background: #e8f5e9; padding: 10px; border-radius: 6px; }
-.btn-confirm { background: #2e7d32; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-.btn-resale { background: #ef6c00; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    --success: #16a34a;
+    --danger: #dc2626;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Kanit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.6;
+    padding-bottom: 50px;
+}
+
+/* ขยายหน้าเว็บให้กว้างเต็มตา */
+.wrap {
+    max-width: 1440px !important; 
+    width: 96% !important;        
+    margin: 20px auto;
+    padding: 0 10px;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: var(--primary-dark) !important;
+    padding: 14px 28px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15) !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.navbar .logo {
+    color: #ffffff !important;
+    font-size: 1.35rem !important;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.nav-item {
+    color: #cbd5e1 !important;
+    text-decoration: none;
+    font-size: 0.98rem;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 12px;
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-item:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    transform: translateY(-1px);
+}
+
+.nav-item.active {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    font-weight: 600;
+}
+
+.nav-item.admin-link {
+    color: #38bdf8 !important;
+}
+
+.nav-item.admin-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(56, 189, 248, 0.25) !important;
+}
+
+.nav-item.logout-link {
+    color: #ffffff !important;
+    background-color: #991b1b !important;
+    padding: 9px 22px !important;
+    border-radius: 30px !important;
+    font-weight: 600;
+    margin-left: 10px;
+    box-shadow: 0 4px 12px rgba(153, 27, 27, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-item.logout-link:hover {
+    background-color: #dc2626 !important;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+    transform: translateY(-1px);
+}
+
+/* MAIN PANEL */
+.panel {
+    background: var(--card-bg);
+    border-radius: 20px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    padding: 35px;
+    border: 1px solid var(--border-color) !important;
+    margin-top: 20px;
+}
+
+.panel h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* FLOATING CONTROL BAR (FILTER) */
+.filter-bar {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 16px 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-control {
+    padding: 8px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: #ffffff;
+    color: var(--text-main);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.filter-control:focus {
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+}
+
+/* LEGEND BADGES (สถานะว่าง/ติดHold/เต็ม) */
+.status-legend {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 30px;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.badge-available {
+    background: var(--sport-available-bg);
+    color: var(--sport-available-text);
+    border: 1px solid var(--sport-available-border);
+}
+
+.badge-holding {
+    background: var(--sport-holding-bg);
+    color: var(--sport-holding-text);
+    border: 1px solid var(--sport-holding-border);
+}
+
+.badge-booked {
+    background: var(--sport-booked-bg);
+    color: var(--sport-booked-text);
+    border: 1px solid var(--sport-booked-border);
+}
+
+/* SPORT GRID TABLE */
+.grid-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.grid-table th {
+    background-color: #f1f5f9 !important;
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.grid-table th:last-child {
+    border-right: none;
+}
+
+.grid-table td {
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.grid-table td:last-child {
+    border-right: none;
+}
+
+.grid-table tr:last-child td {
+    border-bottom: none;
+}
+
+.time-col {
+    font-weight: 700;
+    color: var(--primary-dark);
+    font-size: 0.98rem;
+    background: #fafafa;
+    white-space: nowrap;
+}
+
+/* SPORT BUTTON STYLES (CAPSULE SHAPE) */
+.btn-slot {
+    width: 100%;
+    display: block;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+}
+
+/* สล็อตว่าง - ปรับปรุงปุ่มสีเขียวพรีเมียม */
+.btn-slot.available {
+    background-color: var(--sport-available-bg);
+    color: var(--sport-available-text);
+    border-color: var(--sport-available-border);
+}
+
+.btn-slot.available:hover {
+    background-color: var(--sport-available-hover);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+}
+
+/* สล็อตติด Hold */
+.btn-slot.holding {
+    background-color: var(--sport-holding-bg);
+    color: var(--sport-holding-text);
+    border-color: var(--sport-holding-border);
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+
+/* สล็อตเต็ม */
+.btn-slot.booked {
+    background-color: var(--sport-booked-bg);
+    color: var(--sport-booked-text);
+    border-color: var(--sport-booked-border);
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+.badge-type {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 6px;
+}

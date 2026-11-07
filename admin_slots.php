@@ -1,9 +1,11 @@
 <?php
 // admin_slots.php
 date_default_timezone_set('Asia/Bangkok');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 require_once __DIR__ . '/crud_bootstrap.php';
 
-// ตรวจสอบสิทธิ์ผู้ใช้ (ต้องเป็น OWNER เท่านั้น)
 if (($_SESSION['role'] ?? '') !== 'OWNER') {
     page_start("ปฏิเสธการเข้าถึง");
     echo '<div class="card" style="padding:20px; text-align:center;">';
@@ -17,10 +19,67 @@ if (($_SESSION['role'] ?? '') !== 'OWNER') {
 $message = '';
 $error = '';
 
-// 1. เพิ่มสล็อตเวลาใหม่
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_slot') {
+// 1. ระบบสร้างสล็อตเวลาอัตโนมัติ (13:00 - 21:00 น. สล็อตละ 1 ชั่วโมง)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'auto_generate') {
     verify_csrf();
 
+    $startDate = $_POST['start_date'] ?? date('Y-m-d');
+    $endDate = $_POST['end_date'] ?? date('Y-m-d');
+    $defaultPrice = filter_var($_POST['default_price'] ?? 200, FILTER_VALIDATE_FLOAT);
+
+    if ($startDate > $endDate) {
+        $error = 'วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด';
+    } else {
+        // ดึงคอร์ททั้งหมดที่เปิดใช้งาน
+        $courtsRes = mysqli_query($conn, "SELECT id FROM courts WHERE is_active = 1");
+        $courtIds = [];
+        while ($c = mysqli_fetch_assoc($courtsRes)) {
+            $courtIds[] = $c['id'];
+        }
+
+        // รายการช่วงเวลา 13:00 - 21:00 น. (สล็อตละ 1 ชั่วโมง)
+        $timeSlots = [
+            ['13:00:00', '14:00:00'],
+            ['14:00:00', '15:00:00'],
+            ['15:00:00', '16:00:00'],
+            ['16:00:00', '17:00:00'],
+            ['17:00:00', '18:00:00'],
+            ['18:00:00', '19:00:00'],
+            ['19:00:00', '20:00:00'],
+            ['20:00:00', '21:00:00'],
+        ];
+
+        $createdCount = 0;
+        $currentTimestamp = strtotime($startDate);
+        $endTimestamp = strtotime($endDate);
+
+        $sql = "INSERT INTO court_slots (court_id, slot_date, start_time, end_time, price, is_available) 
+                VALUES (?, ?, ?, ?, ?, 1)
+                ON DUPLICATE KEY UPDATE price = VALUES(price)";
+        $stmt = mysqli_prepare($conn, $sql);
+
+        while ($currentTimestamp <= $endTimestamp) {
+            $dateStr = date('Y-m-d', $currentTimestamp);
+
+            foreach ($courtIds as $cId) {
+                foreach ($timeSlots as $ts) {
+                    mysqli_stmt_bind_param($stmt, "isssd", $cId, $dateStr, $ts[0], $ts[1], $defaultPrice);
+                    if (mysqli_stmt_execute($stmt)) {
+                        $createdCount++;
+                    }
+                }
+            }
+            $currentTimestamp = strtotime('+1 day', $currentTimestamp);
+        }
+        mysqli_stmt_close($stmt);
+
+        $message = "สร้างสล็อตเวลาอัตโนมัติสำเร็จ! รวมทั้งหมด $createdCount สล็อตช่วงเวลา (13:00 - 21:00 น.)";
+    }
+}
+
+// 2. เพิ่มสล็อตเวลาแบบทีละรายการ (Manual)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_slot') {
+    verify_csrf();
     $court_id = valid_id($_POST['court_id'] ?? null);
     $slot_date = $_POST['slot_date'] ?? '';
     $start_time = $_POST['start_time'] ?? '';
@@ -46,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_s
     }
 }
 
-// 2. ลบสล็อตเวลา
+// 3. ลบสล็อตเวลา
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_slot') {
     verify_csrf();
     $slot_id = valid_id($_POST['slot_id'] ?? null);
@@ -63,14 +122,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
     }
 }
 
-// ดึงรายการคอร์ททั้งหมด
 $courts = [];
 $res = mysqli_query($conn, "SELECT * FROM courts WHERE is_active = 1 ORDER BY id ASC");
 while ($row = mysqli_fetch_assoc($res)) {
     $courts[] = $row;
 }
 
-// ดึงสล็อตเวลาปัจจุบันทั้งหมด
 $slots_res = mysqli_query($conn, "
     SELECT cs.*, c.court_name 
     FROM court_slots cs 
@@ -85,8 +142,41 @@ page_start("จัดการสล็อตเวลาสนาม (แอด
 <?php if ($message): ?><p class="ok" style="background:#e8f5e9; color:#2e7d32; padding:10px; border-radius:4px; font-weight:bold;"><?= h($message) ?></p><?php endif; ?>
 <?php if ($error): ?><p class="err" style="background:#ffebee; color:#c62828; padding:10px; border-radius:4px; font-weight:bold;"><?= h($error) ?></p><?php endif; ?>
 
+<!-- กล่องสร้างสล็อตเวลาอัตโนมัติ -->
+<div class="panel" style="background:#e3f2fd; padding:20px; border-radius:8px; margin-bottom:20px; border:1px solid #90caf9;">
+    <h2 style="margin-top:0; color:#1565c0;">⚡ สร้างสล็อตเวลาอัตโนมัติ (13:00 - 21:00 น.)</h2>
+    <p style="color:#555; font-size:0.9rem; margin-bottom:15px;">ระบบจะสร้างสล็อตละ 1 ชั่วโมง (13-14, 14-15, 15-16, 16-17, 17-18, 18-19, 19-20, 20-21) ให้กับทุกคอร์ทโดยอัตโนมัติ</p>
+    
+    <form method="post" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px;">
+        <?php csrf_field(); ?>
+        <input type="hidden" name="action" value="auto_generate">
+
+        <div>
+            <label style="display:block; font-weight:bold; margin-bottom:5px;">ตั้งแต่วันที่:</label>
+            <input type="date" name="start_date" value="<?= date('Y-m-d') ?>" min="<?= date('Y-m-d') ?>" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+        </div>
+
+        <div>
+            <label style="display:block; font-weight:bold; margin-bottom:5px;">ถึงวันที่:</label>
+            <input type="date" name="end_date" value="<?= date('Y-m-d', strtotime('+7 days')) ?>" min="<?= date('Y-m-d') ?>" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+        </div>
+
+        <div>
+            <label style="display:block; font-weight:bold; margin-bottom:5px;">ราคาต่อชั่วโมง (บาท):</label>
+            <input type="number" name="default_price" value="200" step="0.01" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+            <button type="submit" style="padding:10px 20px; background:#1565c0; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">
+                🚀 กดสร้างสล็อตเวลาอัตโนมัติทันที
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- กล่องเพิ่มสล็อตเวลาแบบระบุเอง -->
 <div class="panel" style="background:#f9f9f9; padding:20px; border-radius:8px; margin-bottom:30px; border:1px solid #ddd;">
-    <h2>➕ เพิ่มสล็อตเวลาใหม่</h2>
+    <h2 style="margin-top:0;">➕ เพิ่มสล็อตเวลาแบบระบุเอง</h2>
     <form method="post" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:15px;">
         <?php csrf_field(); ?>
         <input type="hidden" name="action" value="add_slot">
@@ -107,12 +197,12 @@ page_start("จัดการสล็อตเวลาสนาม (แอด
 
         <div>
             <label style="display:block; font-weight:bold; margin-bottom:5px;">เวลาเริ่มต้น:</label>
-            <input type="time" name="start_time" value="17:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+            <input type="time" name="start_time" value="13:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
         </div>
 
         <div>
             <label style="display:block; font-weight:bold; margin-bottom:5px;">เวลาสิ้นสุด:</label>
-            <input type="time" name="end_time" value="18:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
+            <input type="time" name="end_time" value="14:00" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
         </div>
 
         <div>
@@ -122,7 +212,7 @@ page_start("จัดการสล็อตเวลาสนาม (แอด
 
         <div style="grid-column: 1 / -1;">
             <button type="submit" style="padding:10px 20px; background:#2e7d32; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">
-                + สร้างสล็อตเวลา
+                + เพิ่มสล็อตเวลา
             </button>
         </div>
     </form>

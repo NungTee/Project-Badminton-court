@@ -1,62 +1,53 @@
 <?php
-// เปิดการแสดง Error สำหรับช่วยค้นหาจุดผิดพลาด (แก้เสร็จแล้วค่อยปิดได้)
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
+// login.php
+date_default_timezone_set('Asia/Bangkok');
 error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/config/db.php';
+session_start();
 
-if (!empty($_SESSION['user_id'])) { 
-    header('Location: index.php'); 
-    exit; 
+if (file_exists(__DIR__ . '/config/db.php')) {
+    require_once __DIR__ . '/config/db.php';
+} else {
+    die("Error: ไม่พบไฟล์ config/db.php");
+}
+
+// หากล็อกอินอยู่แล้วให้เด้งไปหน้าหลัก
+if (!empty($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit;
 }
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    check_auth_token();
-    $email = strtolower(trim((string)($_POST['email'] ?? '')));
-    $password = (string)($_POST['password'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
-        $error = 'Enter email and password.';
+    if (empty($email) || empty($password)) {
+        $error = 'กรุณากรอกอีเมลและรหัสผ่าน';
     } else {
-        $sql = 'SELECT id, full_name, email, password_hash, role FROM badminton_users WHERE email = ? LIMIT 1';
-        
-        if ($stmt = mysqli_prepare($conn, $sql)) {
-            mysqli_stmt_bind_param($stmt, 's', $email);
+        $stmt = mysqli_prepare($conn, "SELECT id, full_name, password_hash, role FROM badminton_users WHERE email = ? LIMIT 1");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $email);
             mysqli_stmt_execute($stmt);
-            
-            $user_id = null;
-            $full_name = null;
-            $user_email = null;
-            $hash = null;
-            $role = null;
-            
-            mysqli_stmt_bind_result($stmt, $user_id, $full_name, $user_email, $hash, $role);
-            
-            if (mysqli_stmt_fetch($stmt)) {
-                mysqli_stmt_close($stmt);
+            $res = mysqli_stmt_get_result($stmt);
+            $user = mysqli_fetch_assoc($res);
+            mysqli_stmt_close($stmt);
+
+            if ($user && password_verify($password, $user['password_hash'])) {
+                session_regenerate_id(true);
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['full_name'] = $user['full_name'];
+                $_SESSION['role'] = $user['role'];
                 
-                if (password_verify($password, (string)$hash)) {
-                    session_regenerate_id(true);
-                    $_SESSION['user_id'] = $user_id;
-                    $_SESSION['full_name'] = $full_name;
-                    $_SESSION['email'] = $user_email;
-                    $_SESSION['role'] = $role;
-                    
-                    header('Location: index.php');
-                    exit;
-                } else {
-                    $error = 'Invalid email or password.';
-                }
+                header('Location: index.php');
+                exit;
             } else {
-                mysqli_stmt_close($stmt);
-                $error = 'Invalid email or password.';
+                $error = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
             }
         } else {
-            $error = 'Database query failed: ' . mysqli_error($conn);
+            $error = 'เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล';
         }
     }
 }
@@ -66,29 +57,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login</title>
+    <title>เข้าสู่ระบบ | BADMINTON COURT</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        body {
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 15px;
+            box-sizing: border-box;
+        }
+        .app-title {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .login-box {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            padding: 40px 35px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+        .form-group {
+            margin-bottom: 22px;
+        }
+        .form-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #1e293b;
+        }
+        .forgot-link {
+            font-size: 0.88rem;
+            color: #64748b;
+            text-decoration: underline;
+        }
+        .forgot-link:hover {
+            color: #0f172a;
+        }
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        .form-control:focus {
+            border-color: #135c9a;
+            box-shadow: 0 0 0 3px rgba(19, 92, 154, 0.15);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-submit:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+        }
+        .signup-text {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        .signup-text a {
+            color: #0f172a;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+        .err-msg {
+            background-color: #fef2f2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #fee2e2;
+        }
+    </style>
 </head>
 <body>
-<main class="wrap">
-    <div class="panel">
-        <h1>Badminton Court · Login</h1>
-        <p>PHP Session + MySQL Authentication</p>
 
-        <?php if(isset($_GET['registered'])): ?><p class="ok">Registration complete. Please login.</p><?php endif; ?>
-        <?php if(isset($_GET['logged_out'])): ?><p class="ok">Logged out.</p><?php endif; ?>
-        <?php if($error): ?><p class="err"><?=auth_escape($error)?></p><?php endif; ?>
+<!-- หัวข้อระบบด้านบนการ์ดล็อกอิน -->
+<h1 class="app-title">🏸 BADMINTON COURT</h1>
 
-        <form method="post">
-            <input type="hidden" name="auth_csrf" value="<?=auth_escape(auth_token())?>">
-            <label>Email</label>
-            <input name="email" type="email" required autocomplete="username">
-            <label>Password</label>
-            <input name="password" type="password" required autocomplete="current-password">
-            <p><button>Login</button></p>
-        </form>
-        <p>New user? <a href="register.php">Register</a></p>
-    </div>
-</main>
+<div class="login-box">
+    <?php if ($error): ?>
+        <div class="err-msg">⚠️ <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+    <?php endif; ?>
+
+    <form method="post" action="login.php">
+        <div class="form-group">
+            <label for="email">Username or Email</label>
+            <input type="text" id="email" name="email" class="form-control" placeholder="" required autofocus>
+        </div>
+
+        <div class="form-group">
+            <div class="form-label-row">
+                <label for="password">Password</label>
+                <a href="#" class="forgot-link" onclick="alert('กรุณาติดต่อเจ้าหน้าที่เพื่อรีเซ็ตรหัสผ่าน'); return false;">Forgot?</a>
+            </div>
+            <input type="password" id="password" name="password" class="form-control" placeholder="" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Sign In</button>
+
+        <div class="signup-text">
+            Don't have an account? <a href="register.php">Sign up</a>
+        </div>
+    </form>
+</div>
+
 </body>
 </html>

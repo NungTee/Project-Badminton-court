@@ -30,27 +30,33 @@ function valid_id($value) {
 }
 
 function page_start($title) {
+    $currentPage = basename($_SERVER['PHP_SELF']);
     echo '<!doctype html>
 <html lang="th">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>' . h($title) . ' | Court Booking</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <title>' . h($title) . ' | BADMINTON COURT</title>
+    <!-- เติม timestamp ท้ายไฟล์ CSS บังคับอัปเดตแคชทันที -->
+    <link rel="stylesheet" href="assets/css/style.css?v=' . time() . '">
 </head>
 <body>
 <main class="wrap">
-    <nav class="navbar" style="display:flex; justify-content:space-between; align-items:center; background:#135c9a; color:white; padding:15px 20px; border-radius:8px; margin-bottom:20px;">
-        <a href="index.php" class="logo" style="color:white; text-decoration:none; font-weight:bold; font-size:1.2rem;">🏸 Badminton Court</a>
-        <div class="nav-links" style="display:flex; gap:15px; align-items:center;">
-            <a href="index.php" style="color:white; text-decoration:none;">จองสนาม</a>
-            <a href="resale_market.php" style="color:white; text-decoration:none;">ตลาดคอร์ทหลุด</a>
-            <a href="my_bookings.php" style="color:white; text-decoration:none;">รายการจองของฉัน</a>';
+    <nav class="navbar">
+        <a href="index.php" class="logo">🏸 BADMINTON COURT</a>
+        <div class="nav-links">
+            <a href="index.php" class="nav-item ' . ($currentPage === 'index.php' ? 'active' : '') . '">จองสนาม</a>
+            <a href="shop.php" class="nav-item ' . ($currentPage === 'shop.php' ? 'active' : '') . '">🛒 ร้านค้า</a>
+            <a href="resale_market.php" class="nav-item ' . ($currentPage === 'resale_market.php' ? 'active' : '') . '">ตลาดคอร์ทหลุด</a>
+            <a href="my_bookings.php" class="nav-item ' . ($currentPage === 'my_bookings.php' ? 'active' : '') . '">รายการจองของฉัน</a>';
+            
             if (($_SESSION['role'] ?? '') === 'OWNER') {
-                echo '<a href="admin_slots.php" style="color:#ffeb3b; font-weight:bold; text-decoration:none;">⚙️ จัดการเวลา</a>';
-                echo '<a href="admin_dashboard.php" style="color:#80deea; font-weight:bold; text-decoration:none;">📊 แดชบอร์ด</a>';
+                echo '<a href="admin_shop.php" class="nav-item admin-link ' . ($currentPage === 'admin_shop.php' ? 'active' : '') . '">🛍️ จัดการร้านค้า</a>';
+                echo '<a href="admin_slots.php" class="nav-item admin-link ' . ($currentPage === 'admin_slots.php' ? 'active' : '') . '">⚙️ จัดการเวลา</a>';
+                echo '<a href="admin_dashboard.php" class="nav-item admin-link ' . ($currentPage === 'admin_dashboard.php' ? 'active' : '') . '">📊 แดชบอร์ด</a>';
             }
-    echo '  <a href="logout.php" class="btn-logout" style="color:#ffcdd2; text-decoration:none;">ออกจากระบบ</a>
+            
+    echo '  <a href="logout.php" class="nav-item logout-link">ออกจากระบบ →</a>
         </div>
     </nav>
     <div class="panel">
