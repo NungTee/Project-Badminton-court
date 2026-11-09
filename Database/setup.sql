@@ -1,113 +1,170 @@
--- 1. ตารางผู้ใช้งานระบบแบดมินตัน (badminton_users)
-CREATE TABLE IF NOT EXISTS `s68160383`.`badminton_users` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `full_name` VARCHAR(150) NOT NULL,
-    `email` VARCHAR(190) NOT NULL UNIQUE,
-    `phone_number` VARCHAR(20) NOT NULL,
-    `password_hash` VARCHAR(255) NOT NULL,
-    `role` ENUM('PLAYER', 'OWNER', 'STAFF') NOT NULL DEFAULT 'PLAYER',
-    `credit_balance` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- ==========================================
+-- 1. ตารางผู้ใช้งานระบบ (Users)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `badminton_users` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(50) NOT NULL UNIQUE,
+  `password` VARCHAR(255) NOT NULL,
+  `full_name` VARCHAR(100) NOT NULL,
+  `role` ENUM('MEMBER', 'OWNER') DEFAULT 'MEMBER',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 2. ตารางสถานที่/สนามหลัก
-CREATE TABLE IF NOT EXISTS `s68160383`.`venues` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(150) NOT NULL,
-    `address` TEXT NOT NULL,
-    `cancellation_policy` TEXT,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- ==========================================
+-- 2. ตารางสนามหลัก (Venues)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `venues` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `address` TEXT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 3. ตารางคอร์ทแต่ละสนาม
-CREATE TABLE IF NOT EXISTS `s68160383`.`courts` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `venue_id` INT NOT NULL,
-    `court_name` VARCHAR(50) NOT NULL,
-    `court_type` ENUM('RUBBER', 'WOOD', 'CEMENT') DEFAULT 'RUBBER',
-    `is_active` TINYINT(1) DEFAULT 1,
-    FOREIGN KEY (`venue_id`) REFERENCES `s68160383`.`venues`(`id`) ON DELETE CASCADE
+-- ==========================================
+-- 3. ตารางคอร์ท (Courts)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `courts` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `venue_id` INT NOT NULL,
+  `court_name` VARCHAR(50) NOT NULL,
+  `court_type` ENUM('RUBBER', 'WOOD') DEFAULT 'RUBBER',
+  `is_active` TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (`venue_id`) REFERENCES `venues`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. ตารางสล็อตเวลาและราคา
-CREATE TABLE IF NOT EXISTS `s68160383`.`court_slots` (
-    `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-    `court_id` INT NOT NULL,
-    `slot_date` DATE NOT NULL,
-    `start_time` TIME NOT NULL,
-    `end_time` TIME NOT NULL,
-    `price` DECIMAL(10,2) NOT NULL,
-    `is_available` TINYINT(1) DEFAULT 1,
-    FOREIGN KEY (`court_id`) REFERENCES `s68160383`.`courts`(`id`) ON DELETE CASCADE,
-    UNIQUE KEY `unique_slot` (`court_id`, `slot_date`, `start_time`)
+-- ==========================================
+-- 4. ตารางสล็อตเวลาจองสนาม (Court Slots)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `court_slots` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `court_id` INT NOT NULL,
+  `slot_date` DATE NOT NULL,
+  `start_time` TIME NOT NULL,
+  `end_time` TIME NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL,
+  `is_available` TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (`court_id`) REFERENCES `courts`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 5. ตารางการล็อกคอร์ทชั่วคราวกันจองซ้ำ
-CREATE TABLE IF NOT EXISTS `s68160383`.`slot_holds` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `court_slot_id` BIGINT NOT NULL,
-    `user_id` INT NOT NULL,
-    `expires_at` DATETIME NOT NULL,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`court_slot_id`) REFERENCES `s68160383`.`court_slots`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`user_id`) REFERENCES `s68160383`.`badminton_users`(`id`) ON DELETE CASCADE
+-- ==========================================
+-- 5. ตารางกักสล็อตเวลาชั่วคราว (Slot Holds)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `slot_holds` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `court_slot_id` INT NOT NULL,
+  `user_id` INT NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  FOREIGN KEY (`court_slot_id`) REFERENCES `court_slots`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `badminton_users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 6. ตารางข้อมูลการจองหลัก
-CREATE TABLE IF NOT EXISTS `s68160383`.`bookings` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT NOT NULL,
-    `court_slot_id` BIGINT NOT NULL,
-    `total_price` DECIMAL(10,2) NOT NULL,
-    `status` ENUM('PENDING', 'CONFIRMED', 'CANCELLED', 'FOR_RESALE') DEFAULT 'PENDING',
-    `booking_source` ENUM('ONLINE', 'WALK_IN', 'PHONE') DEFAULT 'ONLINE',
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`user_id`) REFERENCES `s68160383`.`badminton_users`(`id`) ON DELETE RESTRICT,
-    FOREIGN KEY (`court_slot_id`) REFERENCES `s68160383`.`court_slots`(`id`) ON DELETE RESTRICT
+-- ==========================================
+-- 6. ตารางรายการจองสนาม (Bookings)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `bookings` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `court_slot_id` INT NOT NULL,
+  `total_price` DECIMAL(10,2) NOT NULL,
+  `status` ENUM('CONFIRMED', 'CANCELLED') DEFAULT 'CONFIRMED',
+  `entry_code` VARCHAR(50) NULL,
+  `is_checked_in` TINYINT(1) DEFAULT 0,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `badminton_users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`court_slot_id`) REFERENCES `court_slots`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 7. ตารางการชำระเงิน
-CREATE TABLE IF NOT EXISTS `s68160383`.`payments` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `booking_id` INT NOT NULL UNIQUE,
-    `amount` DECIMAL(10,2) NOT NULL,
-    `payment_method` VARCHAR(50) NOT NULL,
-    `transaction_ref` VARCHAR(100) NULL,
-    `status` ENUM('PENDING', 'SUCCESS', 'FAILED', 'REFUNDED') DEFAULT 'PENDING',
-    `paid_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`booking_id`) REFERENCES `s68160383`.`bookings`(`id`) ON DELETE CASCADE
+-- ==========================================
+-- 7. ตารางชำระเงิน (Payments)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `payments` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` INT NOT NULL,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `payment_method` VARCHAR(50) DEFAULT 'PROMPTPAY',
+  `status` ENUM('PAID', 'REFUNDED') DEFAULT 'PAID',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 8. ตารางตลาดปล่อยคิวต่อ / คอร์ทหลุด
-CREATE TABLE IF NOT EXISTS `s68160383`.`resale_slots` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `booking_id` INT NOT NULL,
-    `seller_id` INT NOT NULL,
-    `buyer_id` INT NULL,
-    `resale_price` DECIMAL(10,2) NOT NULL,
-    `status` ENUM('OPEN', 'SOLD', 'EXPIRED') DEFAULT 'OPEN',
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (`booking_id`) REFERENCES `s68160383`.`bookings`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`seller_id`) REFERENCES `s68160383`.`badminton_users`(`id`) ON DELETE RESTRICT,
-    FOREIGN KEY (`buyer_id`) REFERENCES `s68160383`.`badminton_users`(`id`) ON DELETE RESTRICT
+-- ==========================================
+-- 8. ตารางสินค้าอุปกรณ์/ลูกแบด (Products)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `products` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `price` DECIMAL(10,2) NOT NULL,
+  `stock` INT NOT NULL DEFAULT 0,
+  `image` VARCHAR(255) NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- เพิ่มข้อมูลผู้ใช้งานตัวอย่างของระบบแบดมินตัน
-INSERT INTO `s68160383`.`badminton_users` (`id`, `full_name`, `email`, `phone_number`, `password_hash`, `role`, `credit_balance`) VALUES
-(1, 'สมชาย สายตี', 'somchai@example.com', '0812345678', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe11.7588102377488', 'PLAYER', 100.00),
-(2, 'วิชัย ใจดี', 'wichai@example.com', '0898765432', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe11.7588102377488', 'PLAYER', 0.00),
-(3, 'เจ้าของสนาม Smash', 'owner@smashbadminton.com', '021112222', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe11.7588102377488', 'OWNER', 0.00);
+-- ==========================================
+-- 9. ตารางคำสั่งซื้อสินค้า (Shop Orders)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `shop_orders` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `total_price` DECIMAL(10,2) NOT NULL,
+  `pickup_code` VARCHAR(50) NULL,
+  `status` ENUM('PAID', 'COMPLETED', 'CANCELLED') DEFAULT 'PAID',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `badminton_users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- เพิ่มข้อมูลสนามและสล็อตเวลาตัวอย่าง
-INSERT INTO `s68160383`.`venues` (`id`, `name`, `address`, `cancellation_policy`) VALUES
-(1, 'Smash Badminton Club', '99/1 ถ.บางนา-ตราด กทม.', 'ยกเลิกก่อน 24 ชม. คืนเงิน 100%');
+-- ==========================================
+-- 10. ตารางรายการสินค้าในคำสั่งซื้อ (Shop Order Items)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `shop_order_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `order_id` INT NOT NULL,
+  `product_id` INT NOT NULL,
+  `quantity` INT NOT NULL,
+  `unit_price` DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (`order_id`) REFERENCES `shop_orders`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `s68160383`.`courts` (`id`, `venue_id`, `court_name`, `court_type`, `is_active`) VALUES
-(1, 1, 'คอร์ท 1 (ยาง PBSI)', 'RUBBER', 1),
-(2, 1, 'คอร์ท 2 (ยาง PBSI)', 'RUBBER', 1);
+-- ==========================================
+-- 11. ตารางตลาดคอร์ทหลุด (Resale Slots)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `resale_slots` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` INT NOT NULL,
+  `seller_user_id` INT NOT NULL,
+  `seller_id` INT NOT NULL,
+  `resale_price` DECIMAL(10,2) NOT NULL,
+  `status` ENUM('OPEN', 'SOLD', 'CANCELLED') DEFAULT 'OPEN',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`seller_user_id`) REFERENCES `badminton_users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `s68160383`.`court_slots` (`court_id`, `slot_date`, `start_time`, `end_time`, `price`, `is_available`) VALUES
-(1, CURDATE(), '17:00:00', '18:00:00', 200.00, 1),
-(1, CURDATE(), '18:00:00', '19:00:00', 250.00, 1),
-(2, CURDATE(), '17:00:00', '18:00:00', 200.00, 1),
-(2, CURDATE(), '18:00:00', '19:00:00', 250.00, 1);
+-- ==========================================
+-- 12. ตารางกลุ่มหารค่าคอร์ท (Booking Splits)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `booking_splits` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` INT NOT NULL,
+  `host_user_id` INT NOT NULL,
+  `total_amount` DECIMAL(10,2) NOT NULL,
+  `split_count` INT NOT NULL DEFAULT 1,
+  `per_person_amount` DECIMAL(10,2) NOT NULL,
+  `status` ENUM('PENDING', 'COMPLETED', 'EXPIRED') DEFAULT 'PENDING',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`booking_id`) REFERENCES `bookings`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ==========================================
+-- 13. ตารางรายการชำระของคนหารบิล (Booking Split Items)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS `booking_split_items` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `split_id` INT NOT NULL,
+  `user_id` INT NULL,
+  `payer_name` VARCHAR(100) NOT NULL,
+  `amount` DECIMAL(10,2) NOT NULL,
+  `payment_status` ENUM('PENDING', 'PAID') DEFAULT 'PENDING',
+  `paid_at` DATETIME NULL,
+  FOREIGN KEY (`split_id`) REFERENCES `booking_splits`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
